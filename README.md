@@ -50,6 +50,7 @@ ADS505_FinalProject/
 ├── dashboard/                  Streamlit dashboard and supporting CSV files
 ├── README.md                   Project documentation
 └── requirements.txt            Required Python packages
+```
 
 ## Setup and How to Run
 
