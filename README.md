@@ -1,4 +1,3 @@
-# ADS 505 Final Project
 
 # Predictive Banking Marketing Intelligence
 
@@ -39,41 +38,7 @@ The project uses the **Bank Marketing dataset** from the UCI Machine Learning Re
 - Reviewed highly correlated economic variables and retained them for prediction.
 - Removed `duration` because it is only known after a call and would create data leakage.
 
-## Analysis and Modeling
-
-The project includes exploratory data analysis, K-Means clustering, and supervised classification.
-
-Four classification models were compared:
-
-- Logistic Regression
-- Decision Tree
-- Random Forest
-- XGBoost
-
-The data was split into **80% training and 20% holdout test data**. Five-fold stratified cross-validation within the training data served as the validation stage for hyperparameter tuning.
-
-GridSearchCV and RandomizedSearchCV were used for hyperparameter tuning. Because the target is imbalanced, **PR-AUC** was the primary model-comparison metric. ROC-AUC, precision, recall, and F1-score were also evaluated.
-
-Random Forest and XGBoost produced very similar results. **Random Forest was retained for the final analysis** because it provided strong ranking performance and straightforward feature-importance interpretation.
-
-K-Means clustering was also used for exploratory customer segmentation. The final two-cluster solution was mainly associated with previous campaign history, so clustering was treated as supporting analysis rather than the primary targeting method.
-
-## Key Results
-
-The final model was used to rank contacts from higher to lower subscription potential.
-
-The **Top 20%** was selected as a practical starting point for resource allocation.
-
-In the historical holdout evaluation:
-
-- **1,647** of 8,236 contacts were prioritized.
-- **614 of 928 subscribers** were reached.
-- About **66% of subscribers** were captured using only 20% of the calls.
-- The strategy produced approximately **3.31× lift** compared with random targeting.
-- **6,589 calls** were avoided compared with calling the entire evaluation list.
-
-The Top 20% is a practical starting point rather than a financially optimal cutoff because actual call costs and the financial value of a subscription were not available.
-
+---
 
 ## Project Structure
 
@@ -111,7 +76,7 @@ The file is read using a semicolon separator:
 pd.read_csv("bank-additional-full.csv", sep=";")
 ```
 
-### 4. Run the analysis
+### 4. Run the notebook
 
 Open the technical Jupyter Notebook and run the cells from top to bottom.
 Run the Jupyter notebook `03_modeling.ipynb`
@@ -143,14 +108,119 @@ The Streamlit dashboard allows users to explore contact levels, subscribers reac
 https://predictive-banking-marketing-intelligence.streamlit.app/
 
 The financial values shown in the dashboard are illustrative because actual bank call costs and subscription values were not included in the dataset.
+---
 
-## Reproducibility
+##  Predictive Modeling
 
-Random seeds were set where applicable for data splitting, cross-validation, clustering, model training, and hyperparameter tuning.
+The supervised learning objective is to estimate the likelihood of term-deposit subscription before a marketing call is made.
 
-Preprocessing and model-training steps were designed so that transformations used for supervised modeling were fitted using the training data.
+### Models Evaluated
 
-Running the notebook from top to bottom with the required dataset and dependencies reproduces the analysis and dashboard output files.
+Four classification models were compared:
+
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- XGBoost
+
+The data was divided using an 80/20 stratified train-test split.
+
+Rather than creating a separate fixed validation dataset, 5-fold stratified cross-validation was performed within the training data for model comparison and hyperparameter tuning. The 20% test set remained untouched until final evaluation.
+
+### Primary Evaluation Metric
+
+Because only approximately 11% of contacts subscribed, the target is imbalanced.
+
+Therefore, **PR-AUC (Precision-Recall Area Under the Curve)** was used as the primary model-comparison metric.
+
+PR-AUC is useful because it evaluates the balance between:
+
+- **Precision:** How many predicted subscribers actually subscribed?
+- **Recall:** How many actual subscribers did the model identify?
+
+---
+
+##  Model Results
+
+### Cross-Validation Performance
+
+| Model | CV PR-AUC |
+|---|---:|
+| Logistic Regression | 0.4500 |
+| Decision Tree | 0.4207 |
+| Random Forest | 0.4684 |
+| XGBoost | **0.4697** |
+
+Random Forest and XGBoost showed very similar performance.
+
+### Holdout Test Performance
+
+| Model | ROC-AUC | PR-AUC |
+|---|---:|---:|
+| Logistic Regression | 0.8003 | 0.4540 |
+| Decision Tree | 0.8038 | 0.4441 |
+| **Random Forest** | **0.8127** | **0.4902** |
+| XGBoost | 0.8126 | 0.4847 |
+
+Random Forest was retained for the final customer-ranking and business analysis because it provided strong holdout ranking performance, slightly higher test PR-AUC, and interpretable feature importance.
+
+---
+
+##  Customer Ranking Strategy
+
+Rather than relying only on a yes/no classification, the final model was used to **rank contacts from higher to lower predicted subscription potential**.
+
+This allows the bank to decide how deeply it wants to work through the ranked contact list.
+
+### Contact-Depth Analysis
+
+| Contact Depth | Contacts | Subscribers Captured | Capture Rate | Lift |
+|---:|---:|---:|---:|---:|
+| 10% | 823 | 434 | 46.77% | 4.68× |
+| **20%** | **1,647** | **614** | **66.16%** | **3.31×** |
+| 30% | 2,470 | 689 | 74.25% | 2.48× |
+| 50% | 4,118 | 779 | 83.94% | 1.68× |
+| 100% | 8,236 | 928 | 100% | 1.00× |
+
+---
+
+## Lift & Cumulative Gains
+
+Lift analysis compares model-based targeting with random targeting.
+
+At the **Top 20% contact depth**:
+
+- **1,647** contacts are prioritized
+- **614 of 928** historical subscribers are captured
+- **66.16%** of subscribers are reached
+- **3.31× lift** is achieved over random targeting
+- Approximately **6,589 calls are avoided** compared with contacting the full evaluation population
+
+Increasing the contact depth from **20% to 30%** requires approximately **823 additional calls** while historically capturing only **75 additional subscribers**.
+
+This demonstrates diminishing returns as the bank moves further down the ranked contact list.
+
+---
+
+## Resource Allocation Recommendation
+
+### Recommended Starting Strategy: Top 20%
+
+The analysis recommends the **Top 20% of model-ranked contacts as a practical starting point**.
+
+This strategy:
+
+- Concentrates potential subscribers near the top of the contact list
+- Captures approximately **66% of historical subscribers**
+- Requires only **20% of the evaluation calls**
+- Produces approximately **3.31× lift**
+- Avoids approximately **80% of calls** compared with contacting everyone
+
+> **Important:** The Top 20% should be interpreted as a practical, resource-efficient starting point rather than a financially optimal cutoff.
+
+Actual campaign call costs and the financial value of a successful term-deposit subscription were not available in the dataset.
+
+---
 
 ## Limitations and Future Work
 
