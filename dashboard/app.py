@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from pathlib import Path
 
 st.set_page_config(page_title="Predictive Banking Marketing Intelligence",
                    page_icon="🏦", layout="wide")
@@ -85,13 +86,17 @@ def html(s):
 def html_in(col, s):
     col.markdown(" ".join(s.split()), unsafe_allow_html=True)
 
+# Get the folder containing app.py
+BASE_DIR = Path(__file__).resolve().parent
 
 @st.cache_data
 def load():
-    return (pd.read_csv("customer_priority_dashboard.csv"),
-            pd.read_csv("contact_depth_analysis.csv"),
-            pd.read_csv("feature_importance.csv"))
+    # Load CSV files from the dashboard folder
+    cust = pd.read_csv(BASE_DIR / "customer_priority_dashboard.csv")
+    depth = pd.read_csv(BASE_DIR / "contact_depth_analysis.csv")
+    feat = pd.read_csv(BASE_DIR / "feature_importance.csv")
 
+    return cust, depth, feat
 
 cust, depth, feat = load()
 depth["Contact Depth (%)"] = depth["Contact Depth (%)"].astype(int)
